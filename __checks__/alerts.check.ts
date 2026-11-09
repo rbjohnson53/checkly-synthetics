@@ -5,7 +5,7 @@ import { EmailAlertChannel } from 'checkly/constructs'
  * so any failing check sends an email (and another when it recovers).
  */
 export const emailAlert = new EmailAlertChannel('email-alert', {
-  address: 'rbjohnson53@gmail.com',
+  address: 'raccoon@checklyhq.com',
   sendFailure: true,
   sendRecovery: true,
   sendDegraded: false,
