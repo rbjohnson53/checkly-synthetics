@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "id": 42,
+      "name": "John Doe",
+      "profile_url": "https://jsonmap-faiy.onrender.com/api/v1/items/user42"
+    },
+    {
+      "id": 64,
+      "name": "Ruby Smith",
+      "profile_url": "https://jsonmap-faiy.onrender.com/api/v1/items/user64"
+    },
+    {
+      "id": 28,
+      "name": "Tina Johnson",
+      "profile_url": "https://jsonmap-faiy.onrender.com/api/v1/items/user28"
+    }
+  ]
+}
