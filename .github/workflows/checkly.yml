@@ -39,6 +39,9 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      - name: Lint (catches unawaited or uncalled assertions)
+        run: npm run lint
+
       - name: Test all checks on Checkly
         # The session name comes from user-written text (PR title / commit message),
         # so it is passed as an environment variable, never pasted into the command.
