@@ -1,14 +1,17 @@
 {
   "name": "checkly-synthetics",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Synthetic monitoring as code with the Checkly CLI: Playwright browser checks and JSON-driven API checks",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "checkly test",
+    "test:local": "playwright test",
+    "deploy": "checkly deploy",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@playwright/test": "1.58.2",
     "@types/node": "^22.20.5",
