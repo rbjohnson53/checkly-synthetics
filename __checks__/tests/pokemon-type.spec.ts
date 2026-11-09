@@ -1,34 +1,35 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from '@playwright/test'
 
-const baseUrl = "https://pokeapi.co/api/v2/"
+const baseUrl = 'https://pokeapi.co/api/v2/'
 
-test("get favorite pokemon and verify type", async ({ request }) => {
-  let favoritePokemon;
-  let pokemonFormURL;
+test('PokeAPI: Pikachu is an electric type', async ({ request }) => {
+  let pokemonUrl: string
+  let formUrl: string
 
-  await test.step("get favorite pokemon", async () => {
-
+  await test.step('find Pikachu in the first 50 Pokémon', async () => {
     const response = await request.get(`${baseUrl}pokemon?limit=50&offset=0`)
-    expect(response).toBeOK()
+    await expect(response).toBeOK()
 
     const data = await response.json()
-    favoritePokemon = data.results.find(pokemon => pokemon.name === "pikachu");
+    const pikachu = data.results.find((pokemon: { name: string }) => pokemon.name === 'pikachu')
+    expect(pikachu, 'Pikachu should be in the first 50 results').toBeDefined()
+    pokemonUrl = pikachu.url
   })
 
-  await test.step("get pokemon form", async () => {
-    const response = await request.get(`${favoritePokemon.url}`)
-    expect(response).toBeOK()
+  await test.step('get Pikachu and its form URL', async () => {
+    const response = await request.get(pokemonUrl)
+    await expect(response).toBeOK()
 
-    const pokemonForm = await response.json()
-    pokemonFormURL = pokemonForm.forms.url
+    const pokemon = await response.json()
+    // `forms` is a list of { name, url } objects, so take the first entry.
+    formUrl = pokemon.forms[0].url
   })
 
-  await test.step("verify pokemon type", async () => {
-    const response = await request.get(`${pokemonFormURL}`)
-    expect(response).toBeOK()
+  await test.step('verify the form is electric type', async () => {
+    const response = await request.get(formUrl)
+    await expect(response).toBeOK()
 
-    const pokemonForm = await response.json()
-    const pokemonType = pokemonForm.types[0].type
-    expect(pokemonType).toBe('electric')
+    const form = await response.json()
+    expect(form.types[0].type.name).toBe('electric')
   })
 })
