@@ -1,0 +1,61 @@
+# Runs the Checkly CLI from GitHub Actions:
+# - Pull requests: test every check once on Checkly. A failing check fails the PR.
+# - Push to main:   test, then deploy, so the account always matches main.
+#
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   CHECKLY_API_KEY     a Checkly user API key
+#   CHECKLY_ACCOUNT_ID  your Checkly account ID
+name: Checkly
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once.
+concurrency:
+  group: checkly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CHECKLY_API_KEY: ${{ secrets.CHECKLY_API_KEY }}
+      CHECKLY_ACCOUNT_ID: ${{ secrets.CHECKLY_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Test all checks on Checkly
+        # The session name comes from user-written text (PR title / commit message),
+        # so it is passed as an environment variable, never pasted into the command.
+        # Only its first line is used.
+        env:
+          SESSION_NAME: "${{ github.event_name }}: ${{ github.event.pull_request.title || github.event.head_commit.message }}"
+        run: >
+          npx checkly test
+          --record
+          --test-session-name "${SESSION_NAME%%$'\n'*}"
+          --reporter github
+          --reporter list
+
+      - name: Add test results to the job summary
+        if: always()
+        run: test -f checkly-github-report.md && cat checkly-github-report.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Deploy to Checkly
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx checkly deploy --force
