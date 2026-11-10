@@ -24,14 +24,24 @@ test('Shop: add Blue Top to cart and reach signup at checkout', async ({ page })
   // "Blue Top" has two Add to cart buttons with the same selector on this page.
   // Scope to the product card that contains the name, then take its first button.
   const blueTopCard = page.locator('.productinfo').filter({ hasText: 'Blue Top' }).first()
-  await blueTopCard.getByText('Add to cart').click()
-  await expect(page.getByRole('heading', { name: 'Added!' })).toBeVisible()
+
+  // "Add to cart" and "Proceed To Checkout" open pop-ups via the site's JavaScript.
+  // A click that lands before that script is ready does nothing (~30% of local runs failed here).
+  // So: click, and retry the click until the pop-up actually appears.
+  await expect(async () => {
+    await blueTopCard.getByText('Add to cart').click()
+    await expect(page.getByRole('heading', { name: 'Added!' })).toBeVisible({ timeout: 2_000 })
+  }).toPass({ timeout: 20_000 })
 
   await page.getByRole('button', { name: 'Continue Shopping' }).click()
   await page.getByRole('link', { name: 'Cart' }).click()
   await expect(page.getByRole('cell', { name: 'Blue Top' })).toBeVisible()
 
-  await page.getByText('Proceed To Checkout').click()
-  await page.getByRole('link', { name: 'Register / Login' }).click()
+  const registerLink = page.getByRole('link', { name: 'Register / Login' })
+  await expect(async () => {
+    await page.getByText('Proceed To Checkout').click()
+    await expect(registerLink).toBeVisible({ timeout: 2_000 })
+  }).toPass({ timeout: 20_000 })
+  await registerLink.click()
   await expect(page.getByRole('heading', { name: 'New User Signup!' })).toBeVisible()
 })
